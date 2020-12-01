@@ -1,28 +1,29 @@
-# Laptop Kaby Lake
 
-| Support | Version |
+#카비레이크 노트북
+| 지원 | 버전 |
 | :--- | :--- |
-| Supported OpenCore version | 0.6.3 |
-| Initial macOS Support | macOS 10.12, Sierra |
+| 지원되는 오픈코어 | 0.6.3 |
+| macos 최초 지원 | macOS 10.12, Sierra |
 
 ## Starting Point
 
-So making a config.plist may seem hard, it's not. It just takes some time but this guide will tell you how to configure everything, you won't be left in the cold. This also means if you have issues, review your config settings to make sure they're correct. Main things to note with OpenCore:
 
-* **All properties must be defined**, there are no default OpenCore will fall back on so **do not delete sections unless told explicitly so**. If the guide doesn't mention the option, leave it at default.
-* **The Sample.plist cannot be used As-Is**, you must configure it to your system
-* **DO NOT USE CONFIGURATORS**, these rarely respect OpenCore's configuration and even some like Mackie's will add Clover properties and corrupt plists!
+오픈코어에서 사용되는 config.plist를 만드는것은 어려워보일수 있지만 가이드를 따라서 하다보면 쉬울것입니다. 만약 제작중 문제가 있다면 이 가이드를 다시 한번 정독하여 모든 설정이 제대로 되었는지 확인해보세요. 오픈코어에서 확인해보아야 할 가장 중요한 것들은 다음과 같습니다: 
+* **모든 설정값들은 정의되어야 합니다**. 오픈코어에서 모든 값들은 정의되어야 하므로 **이 가이드에 나와 있지 않은 경우 절대 값을 지우지 마십시오.**. 만약 이 가이드에 해당 세팅값을 어떻게 변경해야할지 나와있지 않다면 기본값 그대로 두십시오. 
+* **오픈코어에 포함되어 있는 Sample.plist는 그대로 사용될 수 없습니다**. Sample.plist는 말 그대로 샘플이지 동작하는 config.plist가 아님을 명심하십시오. Sample.plist는 사용자의 환경에 맞게 변경해 사용해야 합니다.
+* **Opencore Configurator 등의 configurator들을 이용하지 마십시오**. 이들은 오픈코어의 표준을 따르지 않는 경우들이 존재하고 가끔은 클로버에서 사용되는 변수들이 포함되어 있는 등 문제가 생길 수 있습니다. 처음에는 불편하더라도 configurator를 사용하는 습관을 들이지 마시고 plist를 직접 편집하십시오.
 
-Now with all that, a quick reminder of the tools we need
+위 사항들을 명심하고, 이제 시작해봅시다.
+먼저, 사용하게 될 툴들은 다음과 같습니다.
 
 * [ProperTree](https://github.com/corpnewt/ProperTree)
-  * Universal plist editor
+  * plist 편집(macos에서 할 경우 xcode등 다른 프로그램 이용 가능)
 * [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS)
-  * For generating our SMBIOS data
+  * SMBIOS(mac의 시리얼 번호, 보드id등을 생성하는데 사용)
 * [Sample/config.plist](https://github.com/acidanthera/OpenCorePkg/releases)
-  * See previous section on how to obtain: [config.plist Setup](../config.plist/README.md)
+  * config.plist를 생성하는 방법: [config.plist Setup](../config.plist/README.md)
 
-**And read this guide more than once before setting up OpenCore and make sure you have it set up correctly. Do note that images will not always be the most up-to-date so please read the text below them, if nothing's mentioned then leave as default.**
+**오픈코어를 세팅하기 전에 이 가이드를 꼭 한번 이상 정독해주세요. 이미지는 항상 최신이 아닐 수 있으며 위에서 말한 대로 정의되어 있지 않은 값은 기본값을 유지해주세요.**
 
 ## ACPI
 
@@ -30,13 +31,15 @@ Now with all that, a quick reminder of the tools we need
 
 ### Add
 
-::: tip Info
+::: 팁
 
-This is where you'll add SSDTs for your system, these are very important to **booting macOS** and have many uses like [USB maps](https://dortania.github.io/OpenCore-Post-Install/usb/), [disabling unsupported GPUs](https://dortania.github.io/OpenCore-Post-Install/) and such. And with our system, **it's even required to boot**. Guide on making them found here: [**Getting started with ACPI**](https://dortania.github.io/Getting-Started-With-ACPI/)
+이곳은 컴퓨터에서 사용되는 ACPI의 변경점들을 정의하는 곳이며 **macOS를 부팅하는데** 매우 중요합니다.  
+또한 [USB maps](https://dortania.github.io/OpenCore-Post-Install/usb/), [disabling unsupported GPUs](https://dortania.github.io/OpenCore-Post-Install/) 등을 하는데에도 유용하게 사용됩니다.  
+그리고 이는 **부팅시에도 필요합니다**. 이를 만드는 방법에 대한 가이드는 다음과 같습니다.: [**Getting started with ACPI**](https://dortania.github.io/Getting-Started-With-ACPI/)  
 
-For us we'll need a couple of SSDTs to bring back functionality that Clover provided:
-
-| Required_SSDTs | Description |
+먼저, 우리는 클로버에서 사용되던 기능들을 SSDT 패치를 통해 사용할것입니다.  
+사용되는 SSDT들은 다음과 같습니다.
+| 필요한 SSDT | 설명 |
 | :--- | :--- |
 | **[SSDT-PLUG](https://dortania.github.io/Getting-Started-With-ACPI/)** | Allows for native CPU power management on Haswell and newer, see [Getting Started With ACPI Guide](https://dortania.github.io/Getting-Started-With-ACPI/) for more details. |
 | **[SSDT-EC-USBX](https://dortania.github.io/Getting-Started-With-ACPI/)** | Fixes both the embedded controller and USB power, see [Getting Started With ACPI Guide](https://dortania.github.io/Getting-Started-With-ACPI/) for more details. |
